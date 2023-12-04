@@ -75,12 +75,12 @@ class ModbusTCPTemplate : public Modbus {
 	void cleanupTransactions();	// Remove timedout transactions and forced event
 
 	int8_t getFreeClient();    // Returns free slot position
-	int8_t getSlave(IPAddress ip);
+	int8_t getSlave(IPAddress ip, uint16_t port = 0);
 	int8_t getMaster(IPAddress ip);
 	public:
-	uint16_t send(String host, TAddress startreg, cbTransaction cb, uint8_t unit = MODBUSIP_UNIT, uint8_t* data = nullptr, bool waitResponse = true);
-	uint16_t send(const char* host, TAddress startreg, cbTransaction cb, uint8_t unit = MODBUSIP_UNIT, uint8_t* data = nullptr, bool waitResponse = true);
-	uint16_t send(IPAddress ip, TAddress startreg, cbTransaction cb, uint8_t unit = MODBUSIP_UNIT, uint8_t* data = nullptr, bool waitResponse = true);
+	uint16_t send(String host, TAddress startreg, cbTransaction cb, uint16_t port = MODBUSTCP_PORT, uint8_t unit = MODBUSIP_UNIT, uint8_t* data = nullptr, bool waitResponse = true);
+	uint16_t send(const char* host, TAddress startreg, cbTransaction cb, uint16_t port = MODBUSTCP_PORT, uint8_t unit = MODBUSIP_UNIT, uint8_t* data = nullptr, bool waitResponse = true);
+	uint16_t send(IPAddress ip, TAddress startreg, cbTransaction cb, uint16_t port = MODBUSTCP_PORT, uint8_t unit = MODBUSIP_UNIT, uint8_t* data = nullptr, bool waitResponse = true);
 	// Prepare and send ModbusIP frame. _frame buffer and _len should be filled with Modbus data
 	// ip - slave ip address
 	// startreg - first local register to save returned data to (miningless for write to slave operations)
@@ -101,7 +101,7 @@ class ModbusTCPTemplate : public Modbus {
 #endif
 	bool isConnected(IPAddress ip);
 	bool connect(IPAddress ip, uint16_t port = 0);
-	bool disconnect(IPAddress ip);
+	bool disconnect(IPAddress ip, uint16_t port = 0);
 	// ModbusTCP
 	void server(uint16_t port = 0);
 	// ModbusTCP depricated
@@ -163,7 +163,7 @@ bool ModbusTCPTemplate<SERVER, CLIENT>::connect(IPAddress ip, uint16_t port) {
 	//cleanupConnections();
 	if (!ip)
 		return false;
-	if(getSlave(ip) != -1)
+	if(getSlave(ip, port) != -1)
 		return true;
 	int8_t p = getFreeClient();
 	if (p == -1)
@@ -371,17 +371,17 @@ void ModbusTCPTemplate<SERVER, CLIENT>::task() {
 }
 
 template <class SERVER, class CLIENT>
-uint16_t ModbusTCPTemplate<SERVER, CLIENT>::send(String host, TAddress startreg, cbTransaction cb, uint8_t unit, uint8_t* data, bool waitResponse) {
-	return send(resolve(host.c_str()), startreg, cb, unit, data, waitResponse);
+uint16_t ModbusTCPTemplate<SERVER, CLIENT>::send(String host, TAddress startreg, cbTransaction cb, uint16_t port, uint8_t unit, uint8_t* data, bool waitResponse) {
+	return send(resolve(host.c_str()), startreg, cb, port, unit, data, waitResponse);
 }
 
 template <class SERVER, class CLIENT>
-uint16_t ModbusTCPTemplate<SERVER, CLIENT>::send(const char* host, TAddress startreg, cbTransaction cb, uint8_t unit, uint8_t* data, bool waitResponse) {
-	return send(resolve(host), startreg, cb, unit, data, waitResponse);
+uint16_t ModbusTCPTemplate<SERVER, CLIENT>::send(const char* host, TAddress startreg, cbTransaction cb, uint16_t port, uint8_t unit, uint8_t* data, bool waitResponse) {
+	return send(resolve(host), startreg, cb, port, unit, data, waitResponse);
 }
 
 template <class SERVER, class CLIENT>
-uint16_t ModbusTCPTemplate<SERVER, CLIENT>::send(IPAddress ip, TAddress startreg, cbTransaction cb, uint8_t unit, uint8_t* data, bool waitResponse) {
+uint16_t ModbusTCPTemplate<SERVER, CLIENT>::send(IPAddress ip, TAddress startreg, cbTransaction cb, uint16_t port, uint8_t unit, uint8_t* data, bool waitResponse) {
 	MBAP_t _MBAP;
 	uint16_t result = 0;
 	int8_t p;
@@ -394,12 +394,12 @@ uint16_t ModbusTCPTemplate<SERVER, CLIENT>::send(IPAddress ip, TAddress startreg
 	if (tcpserver) {
 		p = getMaster(ip);
 	} else {
-		p = getSlave(ip);
+		p = getSlave(ip, port);
 	}
 	if (p == -1 || !tcpclient[p]->connected()) {
 		if (!autoConnectMode)
 			goto cleanup;
-		if (!connect(ip))
+		if (!connect(ip, port))
 			goto cleanup;
 	}
 	_MBAP.transactionId	= __swap_16(transactionId);
@@ -501,9 +501,9 @@ int8_t ModbusTCPTemplate<SERVER, CLIENT>::getFreeClient() {
 }
 
 template <class SERVER, class CLIENT>
-int8_t ModbusTCPTemplate<SERVER, CLIENT>::getSlave(IPAddress ip) {
+int8_t ModbusTCPTemplate<SERVER, CLIENT>::getSlave(IPAddress ip, uint16_t port) {
 	for (uint8_t i = 0; i < MODBUSIP_MAX_CLIENTS; i++)
-		if (tcpclient[i] && tcpclient[i]->connected() && tcpclient[i]->remoteIP() == ip && !BIT_CHECK(tcpServerConnection, i))
+		if (tcpclient[i] && tcpclient[i]->connected() && tcpclient[i]->remoteIP() == ip && tcpclient[i]->remotePort() == port && !BIT_CHECK(tcpServerConnection, i))
 			return i;
 	return -1;
 }
@@ -533,10 +533,10 @@ bool ModbusTCPTemplate<SERVER, CLIENT>::isConnected(const char* host) {
 #endif
 
 template <class SERVER, class CLIENT>
-bool ModbusTCPTemplate<SERVER, CLIENT>::isConnected(IPAddress ip) {
+bool ModbusTCPTemplate<SERVER, CLIENT>::isConnected(IPAddress ip, uint16_t port) {
 	if (!ip)
 		return false;
-	int8_t p = getSlave(ip);
+	int8_t p = getSlave(ip, port);
 	return  p != -1 && tcpclient[p]->connected();
 }
 
@@ -547,21 +547,21 @@ void ModbusTCPTemplate<SERVER, CLIENT>::autoConnect(bool enabled) {
 
 #if defined(MODBUSIP_USE_DNS)
 template <class SERVER, class CLIENT>
-bool ModbusTCPTemplate<SERVER, CLIENT>::disconnect(String host) {
-	return disconnect(resolve(host.c_str()));
+bool ModbusTCPTemplate<SERVER, CLIENT>::disconnect(String host, uint16_t port) {
+	return disconnect(resolve(host.c_str()), port);
 }
 
 template <class SERVER, class CLIENT>
-bool ModbusTCPTemplate<SERVER, CLIENT>::disconnect(const char* host) {
-	return disconnect(resolve(host));
+bool ModbusTCPTemplate<SERVER, CLIENT>::disconnect(const char* host, uint16_t port) {
+	return disconnect(resolve(host), port);
 }
 #endif
 
 template <class SERVER, class CLIENT>
-bool ModbusTCPTemplate<SERVER, CLIENT>::disconnect(IPAddress ip) {
+bool ModbusTCPTemplate<SERVER, CLIENT>::disconnect(IPAddress ip, uint16_t port) {
 	if (!ip)
 		return false;
-	int8_t p = getSlave(ip);
+	int8_t p = getSlave(ip, port);
 	if (p != -1) {
 		tcpclient[p]->stop();
 		delete tcpclient[p];
