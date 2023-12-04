@@ -522,13 +522,13 @@ bool ModbusTCPTemplate<SERVER, CLIENT>::isTransaction(uint16_t id) {
 }
 #if defined(MODBUSIP_USE_DNS)
 template <class SERVER, class CLIENT>
-bool ModbusTCPTemplate<SERVER, CLIENT>::isConnected(String host) {
-	return isConnected(resolve(host.c_str()));
+bool ModbusTCPTemplate<SERVER, CLIENT>::isConnected(String host, uint16_t port) {
+	return isConnected(resolve(host.c_str()), port);
 }
 
 template <class SERVER, class CLIENT>
 bool ModbusTCPTemplate<SERVER, CLIENT>::isConnected(const char* host) {
-	return isConnected(resolve(host));
+	return isConnected(resolve(host), port);
 }
 #endif
 
