@@ -31,7 +31,7 @@ class ModbusRTUTemplate : public Modbus {
 		uint16_t maxRegs = MODBUS_MAX_WORDS;
 		uint8_t address = 0;
 
-		uint16_t send(uint8_t slaveId, TAddress startreg, cbTransaction cb, uint8_t unit = MODBUSIP_UNIT, uint8_t* data = nullptr, bool waitResponse = true);
+		uint16_t send(uint8_t slaveId, TAddress startreg, cbTransaction cb, uint16_t port, uint8_t unit = MODBUSIP_UNIT, uint8_t* data = nullptr, bool waitResponse = true);
 		// Prepare and send ModbusRTU frame. _frame buffer and _len should be filled with Modbus data
 		// slaveId - slave id
 		// startreg - first local register to save returned data to (miningless for write to slave operations)
