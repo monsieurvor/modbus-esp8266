@@ -92,14 +92,14 @@ class ModbusTCPTemplate : public Modbus {
 	~ModbusTCPTemplate();
 	bool isTransaction(uint16_t id);
 #if defined(MODBUSIP_USE_DNS)
-	bool isConnected(String host);
-	bool isConnected(const char* host);
+	bool isConnected(String host, uint16_t port = 0);
+	bool isConnected(const char* host, uint16_t port = 0);
 	bool connect(String host, uint16_t port = 0);
 	bool connect(const char* host, uint16_t port = 0);
 	bool disconnect(String host);
 	bool disconnect(const char* host);
 #endif
-	bool isConnected(IPAddress ip);
+	bool isConnected(IPAddress ip, uint16_t port = 0);
 	bool connect(IPAddress ip, uint16_t port = 0);
 	bool disconnect(IPAddress ip, uint16_t port = 0);
 	// ModbusTCP
