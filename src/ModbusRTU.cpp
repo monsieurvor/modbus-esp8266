@@ -180,7 +180,7 @@ bool ModbusRTUTemplate::rawSend(uint8_t slaveId, uint8_t* frame, uint8_t len) {
     return true;
 }
 
-uint16_t ModbusRTUTemplate::send(uint8_t slaveId, TAddress startreg, cbTransaction cb, uint8_t unit, uint8_t* data, bool waitResponse) {
+uint16_t ModbusRTUTemplate::send(uint8_t slaveId, TAddress startreg, cbTransaction cb, uint16_t port, uint8_t unit, uint8_t* data, bool waitResponse) {
     bool result = false;
 	if ((!isMaster || !_slaveId) && _len && _frame) { // Check if waiting for previous request result and _frame filled
 	//if (_len && _frame) { // Check if waiting for previous request result and _frame filled
