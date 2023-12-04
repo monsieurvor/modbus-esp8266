@@ -527,7 +527,7 @@ bool ModbusTCPTemplate<SERVER, CLIENT>::isConnected(String host, uint16_t port) 
 }
 
 template <class SERVER, class CLIENT>
-bool ModbusTCPTemplate<SERVER, CLIENT>::isConnected(const char* host) {
+bool ModbusTCPTemplate<SERVER, CLIENT>::isConnected(const char* host, uint16_t port) {
 	return isConnected(resolve(host), port);
 }
 #endif
