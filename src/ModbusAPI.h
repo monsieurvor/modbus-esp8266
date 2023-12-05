@@ -10,54 +10,6 @@
 template <class T>
 class ModbusAPI : public T {
 	public:
-	// Alternative API
-	template <typename TYPEID>
-	uint16_t read(TYPEID id, TAddress reg, uint16_t* value, uint16_t numregs = 1, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
-	template <typename TYPEID>
-	uint16_t read(TYPEID id, TAddress reg, bool* value, uint16_t numregs = 1, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
-	template <typename TYPEID>		
-	uint16_t write(TYPEID id, TAddress reg, uint16_t value, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
-	template <typename TYPEID>
-	uint16_t write(TYPEID id, TAddress reg, bool value, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
-	template <typename TYPEID>
-	uint16_t write(TYPEID id, TAddress reg, uint16_t* value, uint16_t numregs = 1, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
-	template <typename TYPEID>
-	uint16_t write(TYPEID id, TAddress reg, bool* value, uint16_t numregs = 1, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
-/*
-	template <typename TYPEID>
-	uint16_t push(TYPEID id, TAddress to, TAddress from, uint16_t numregs = 1, cbTransaction cb = nullptr, uint8_t unit = MODBUSIP_UNIT);
-	template <typename TYPEID>
-	uint16_t pull(TYPEID id, TAddress from, TAddress to, uint16_t numregs = 1, cbTransaction cb = nullptr, uint8_t unit = MODBUSIP_UNIT);
-*/
-	// Classic API
-	bool Hregs(uint16_t offset, uint16_t* value, uint16_t numregs = 1) {return this->Reg(HREG(offset), value);}
-	bool Iregs(uint16_t offset, uint16_t* value, uint16_t numregs = 1) {return this->Reg(IREG(offset), value);}
-
-	//bool addHreg(uint16_t offset, uint16_t* value, uint16_t numregs = 1) {return this->addReg(HREG(offset), value);}
-	//bool addIreg(uint16_t offset, uint16_t* value, uint16_t numregs = 1) {return this->addReg(IREG(offset), value);}
-
-	bool addHreg(uint16_t offset, uint16_t value = 0, uint16_t numregs = 1);
-	bool addIreg(uint16_t offset, uint16_t value = 0, uint16_t numregs = 1);
-
-	bool Hreg(uint16_t offset, uint16_t value);
-	bool Ireg(uint16_t offset, uint16_t value);
-
-	uint16_t Ireg(uint16_t offset);
-	uint16_t Hreg(uint16_t offset);
-
-	bool removeIreg(uint16_t offset, uint16_t numregs = 1);
-	bool removeHreg(uint16_t offset, uint16_t numregs = 1);
-
-	bool onGetHreg(uint16_t offset, cbModbus cb = nullptr, uint16_t numregs = 1);
-	bool onSetHreg(uint16_t offset, cbModbus cb = nullptr, uint16_t numregs = 1);
-	bool onGetIreg(uint16_t offset, cbModbus cb = nullptr, uint16_t numregs = 1);
-	bool onSetIreg(uint16_t offset, cbModbus cb = nullptr, uint16_t numregs = 1);
-
-	bool removeOnGetHreg(uint16_t offset, cbModbus cb = nullptr, uint16_t numregs = 1);
-	bool removeOnSetHreg(uint16_t offset, cbModbus cb = nullptr, uint16_t numregs = 1);
-	bool removeOnGetIreg(uint16_t offset, cbModbus cb = nullptr, uint16_t numregs = 1);
-	bool removeOnSetIreg(uint16_t offset, cbModbus cb = nullptr, uint16_t numregs = 1);
-
 	template <typename TYPEID>
 	uint16_t writeHreg(TYPEID id, uint16_t offset, uint16_t value, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
 	template <typename TYPEID>
@@ -67,27 +19,10 @@ class ModbusAPI : public T {
 	template <typename TYPEID>
 	uint16_t readIreg(TYPEID id, uint16_t offset, uint16_t* value, uint16_t numregs = 1, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
 
-	template <typename TYPEID>
-	uint16_t pushHreg(TYPEID id, uint16_t to, uint16_t from, uint16_t numregs = 1, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
-	template <typename TYPEID>
-	uint16_t pullHreg(TYPEID id, uint16_t from, uint16_t to, uint16_t numregs = 1, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
-	template <typename TYPEID>
-	uint16_t pullIreg(TYPEID id, uint16_t from, uint16_t to, uint16_t numregs = 1, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
-
-	template <typename TYPEID>
-	uint16_t pullHregToIreg(TYPEID id, uint16_t offset, uint16_t startreg, uint16_t numregs = 1, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
-	template <typename TYPEID>
-	uint16_t pushIregToHreg(TYPEID id, uint16_t to, uint16_t from, uint16_t numregs = 1, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
-
-  template <typename TYPEID>
+  	template <typename TYPEID>
 	uint16_t readFileRec(TYPEID slaveId, uint16_t fileNum, uint16_t startRec, uint16_t len, uint8_t* data, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
 	template <typename TYPEID>
 	uint16_t writeFileRec(TYPEID slaveId, uint16_t fileNum, uint16_t startRec, uint16_t len, uint8_t* data, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
-
-	template <typename TYPEID>
-	uint16_t maskHreg(TYPEID slaveId, uint16_t offset, uint16_t andMask, uint16_t orMask, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
-	template <typename TYPEID>
-	uint16_t readWriteHreg(TYPEID slaveId, uint16_t readOffset, uint16_t* readValue, uint16_t readNumregs, uint16_t writeOffset, uint16_t* writeValue, uint16_t writeNumregs, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
 
 	template <typename TYPEID>
 	uint16_t rawRequest(TYPEID ip, uint8_t* data, uint16_t len, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
@@ -133,134 +68,6 @@ uint16_t ModbusAPI<T>::FNAME(TYPEID ip, uint16_t offset, VALTYPE* value, uint16_
 IMPLEMENT_READREGS(readHreg, HREG, FC_READ_REGS, MODBUS_MAX_WORDS, uint16_t)
 IMPLEMENT_READREGS(readIreg, IREG, FC_READ_INPUT_REGS, MODBUS_MAX_WORDS, uint16_t)
 
-#if defined(MODBUS_ADD_REG)
-#define ADDREG(R) this->addReg(R(to), (uint16_t)0, numregs);
-#else
-#define ADDREG(R) ;
-#endif
-#define IMPLEMENT_PULL(FNAME, REG, FUNC, MAXNUM) \
-template <class T> \
-template <typename TYPEID> \
-uint16_t ModbusAPI<T>::FNAME(TYPEID ip, uint16_t from, uint16_t to, uint16_t numregs, cbTransaction cb, uint16_t port, uint8_t unit) { \
-	if (numregs < 0x0001 || numregs > MAXNUM) return false; \
-	ADDREG(REG) \
-	this->readSlave(from, numregs, Modbus::FUNC); \
-	return this->send(ip, REG(to), cb, port, unit); \
-}
-IMPLEMENT_PULL(pullHreg, HREG, FC_READ_REGS, MODBUS_MAX_WORDS)
-IMPLEMENT_PULL(pullIreg, IREG, FC_READ_INPUT_REGS, MODBUS_MAX_WORDS)
-IMPLEMENT_PULL(pullHregToIreg, IREG, FC_READ_REGS, MODBUS_MAX_WORDS)
-
-#define IMPLEMENT_PUSH(FNAME, REG, FUNC, MAXNUM, FINT) \
-template <class T> \
-template <typename TYPEID> \
-uint16_t ModbusAPI<T>::FNAME(TYPEID ip, uint16_t to, uint16_t from, uint16_t numregs, cbTransaction cb, uint16_t port, uint8_t unit) { \
-	if (numregs < 0x0001 || numregs > MAXNUM) return false; \
-	if (!this->searchRegister(REG(from))) return false; \
-	this->FINT(REG(from), to, numregs, Modbus::FUNC); \
-	return this->send(ip, REG(from), cb, port, unit); \
-}
-IMPLEMENT_PUSH(pushHreg, HREG, FC_WRITE_REGS, MODBUS_MAX_WORDS, writeSlaveWords)
-IMPLEMENT_PUSH(pushIregToHreg, IREG, FC_WRITE_REGS, MODBUS_MAX_WORDS, writeSlaveWords)
-
-template <class T>
-template <typename TYPEID>
-uint16_t ModbusAPI<T>::read(TYPEID id, TAddress reg, uint16_t* value, uint16_t numregs, cbTransaction cb, uint16_t port, uint8_t unit) {
-	switch (reg.type) {
-	case TAddress::HREG:
-		return readHreg(id, reg.address, value, numregs, cb, port, unit);
-	case TAddress::IREG:
-		return readIreg(id, reg.address, value, numregs, cb, port, unit);
-	default:
-		return 0;
-	}
-}
-template <class T>
-template <typename TYPEID>
-uint16_t ModbusAPI<T>::write(TYPEID id, TAddress reg, uint16_t value, cbTransaction cb, uint16_t port, uint8_t unit) {
-	switch (reg.type) {
-	case TAddress::HREG:
-		return writeHreg(id, reg.address, value, cb, port, unit);
-	default:
-		return 0;
-	}
-}
-
-template <class T>
-template <typename TYPEID>
-uint16_t ModbusAPI<T>::write(TYPEID id, TAddress reg, uint16_t* value, uint16_t numregs, cbTransaction cb, uint16_t port, uint8_t unit) {
-	switch (reg.type) {
-	case TAddress::HREG:
-		return writeHreg(id, reg.address, value, numregs, cb, port, unit);
-	default:
-		return 0;
-	}
-}
-
-template <class T> \
-bool ModbusAPI<T>::addHreg(uint16_t offset, uint16_t value, uint16_t numregs) {
-    return this->addReg(HREG(offset), value, numregs);
-}
-template <class T> \
-bool ModbusAPI<T>::Hreg(uint16_t offset, uint16_t value) {
-    return this->Reg(HREG(offset), value);
-}
-template <class T> \
-uint16_t ModbusAPI<T>::Hreg(uint16_t offset) {
-    return this->Reg(HREG(offset));
-}
-template <class T> \
-bool ModbusAPI<T>::removeHreg(uint16_t offset, uint16_t numregs) {
-    return this->removeReg(HREG(offset), numregs);
-}
-template <class T> \
-bool ModbusAPI<T>::addIreg(uint16_t offset, uint16_t value, uint16_t numregs) {
-    return this->addReg(IREG(offset), value, numregs);
-}
-template <class T> \
-bool ModbusAPI<T>::Ireg(uint16_t offset, uint16_t value) {
-    return this->Reg(IREG(offset), value);
-}
-template <class T> \
-uint16_t ModbusAPI<T>::Ireg(uint16_t offset) {
-    return this->Reg(IREG(offset));
-}
-template <class T> \
-bool ModbusAPI<T>::removeIreg(uint16_t offset, uint16_t numregs) {
-    return this->removeReg(IREG(offset), numregs);
-}
-template <class T> \
-bool ModbusAPI<T>::onGetHreg(uint16_t offset, cbModbus cb, uint16_t numregs) {
-    return this->onGet(HREG(offset), cb, numregs);
-}
-template <class T> \
-bool ModbusAPI<T>::onSetHreg(uint16_t offset, cbModbus cb, uint16_t numregs) {
-    return this->onSet(HREG(offset), cb, numregs);
-}
-template <class T> \
-bool ModbusAPI<T>::onGetIreg(uint16_t offset, cbModbus cb, uint16_t numregs) {
-    return this->onGet(IREG(offset), cb, numregs);
-}
-template <class T> \
-bool ModbusAPI<T>::onSetIreg(uint16_t offset, cbModbus cb, uint16_t numregs) {
-    return this->onSet(IREG(offset), cb, numregs);
-}
-template <class T> \
-bool ModbusAPI<T>::removeOnGetHreg(uint16_t offset, cbModbus cb, uint16_t numregs) {
-    return this->removeOnGet(HREG(offset), cb, numregs);
-}
-template <class T> \
-bool ModbusAPI<T>::removeOnSetHreg(uint16_t offset, cbModbus cb, uint16_t numregs) {
-    return this->removeOnSet(HREG(offset), cb, numregs);
-}
-template <class T> \
-bool ModbusAPI<T>::removeOnGetIreg(uint16_t offset, cbModbus cb, uint16_t numregs) {
-    return this->removeOnGet(IREG(offset), cb, numregs);
-}
-template <class T> \
-bool ModbusAPI<T>::removeOnSetIreg(uint16_t offset, cbModbus cb, uint16_t numregs) {
-    return this->removeOnSet(IREG(offset), cb, numregs);
-}
 template <class T> \
 template <typename TYPEID> \
 uint16_t ModbusAPI<T>::readFileRec(TYPEID slaveId, uint16_t fileNum, uint16_t startRec, uint16_t len, uint8_t* data, cbTransaction cb, uint16_t port, uint8_t unit) {
@@ -274,56 +81,6 @@ uint16_t ModbusAPI<T>::writeFileRec(TYPEID slaveId, uint16_t fileNum, uint16_t s
 	if (startRec > MODBUS_MAX_FILES) return 0;
 	if (!this->writeSlaveFile(&fileNum, &startRec, &len, 1, Modbus::FC_WRITE_FILE_REC, data)) return 0;
 	return this->send(slaveId, NULLREG, cb, port, unit);
-};
-template <class T> \
-template <typename TYPEID> \
-uint16_t ModbusAPI<T>::maskHreg(TYPEID slaveId, uint16_t offset, uint16_t andMask, uint16_t orMask, cbTransaction cb, uint16_t port, uint8_t unit) {
-	free(this->_frame);
-	this->_len = 7;
-	this->_frame = (uint8_t*) malloc(this->_len);
-	this->_frame[0] = Modbus::FC_MASKWRITE_REG;
-	this->_frame[1] = offset >> 8;
-	this->_frame[2] = offset & 0x00FF;
-	this->_frame[3] = andMask >> 8;
-	this->_frame[4] = andMask & 0x00FF;
-	this->_frame[5] = orMask >> 8;
-	this->_frame[6] = orMask & 0x00FF;
-	return this->send(slaveId, HREG(offset), cb, port, unit);	
-};
-
-template <class T> \
-template <typename TYPEID> \
-uint16_t ModbusAPI<T>::readWriteHreg(TYPEID ip, \
-			uint16_t readOffset, uint16_t* readValue, uint16_t readNumregs, \
-			uint16_t writeOffset, uint16_t* writeValue, uint16_t writeNumregs, \
-			cbTransaction cb, uint16_t port, uint8_t unit) {
-	const uint8_t _header = 10;
-	if (readNumregs < 0x0001 || readNumregs > MODBUS_MAX_WORDS || writeNumregs < 0x0001 || writeNumregs > 0X0079 || !readValue || !writeValue) return 0;
-
-	free(this->_frame);
-	this->_len = _header + 2 * writeNumregs;
-	this->_frame = (uint8_t*) malloc(this->_len);
-    if (!this->_frame) {
-		this->_reply = Modbus::REPLY_OFF;
-		return 0;    
-	}
-	this->_frame[0] = Modbus::FC_READWRITE_REGS;
-	this->_frame[1] = readOffset >> 8;
-	this->_frame[2] = readOffset & 0x00FF;
-	this->_frame[3] = readNumregs >> 8;
-	this->_frame[4] = readNumregs & 0x00FF;
-
-	this->_frame[5] = writeOffset >> 8;
-	this->_frame[6] = writeOffset & 0x00FF;
-	this->_frame[7] = writeNumregs >> 8;
-	this->_frame[8] = writeNumregs & 0x00FF;
-    this->_frame[9] = this->_len - _header;
-
-    uint16_t* frame = (uint16_t*)(this->_frame + _header);
-    for (uint8_t i = 0; i < writeNumregs; i++) {
-        frame[i] = __swap_16(writeValue[i]);
-    }
-    return this->send(ip, HREG(readOffset), cb, port, unit, (uint8_t*)readValue);
 };
 
 template <class T>
