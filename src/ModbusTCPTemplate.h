@@ -212,7 +212,7 @@ void ModbusTCPTemplate<CLIENT>::task() {
 			}
 			_len = __swap_16(_MBAP.length);
 			if (_len < MODBUSIP_MINFRAME) {	// Length is shorter than MODBUSIP_MINFRAME
-				Modbus::FunctionCode fc = FC_READ_COILS; // Just placeholder
+				Modbus::FunctionCode fc = FC_DIAGNOSTICS; // Just placeholder
 				while (tcpclient[n]->available())	// Drop rest of the packet
 					tcpclient[n]->read();
 				exceptionResponse(fc, EX_ILLEGAL_VALUE);
