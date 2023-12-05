@@ -89,7 +89,6 @@ class Modbus {
     public:
         //Function Codes
         enum FunctionCode {
-            FC_READ_INPUT_STAT  = 0x02, // Read Input Status (Discrete Inputs)
             FC_READ_REGS        = 0x03, // Read Holding Registers
             FC_READ_INPUT_REGS  = 0x04, // Read Input Registers
             FC_WRITE_REG        = 0x06, // Preset Single Register
