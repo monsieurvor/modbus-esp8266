@@ -36,7 +36,7 @@ struct TTransaction {
 	}
 };
 
-template <class SERVER, class CLIENT>
+template <class CLIENT>
 class ModbusTCPTemplate : public Modbus {
 	protected:
 	union MBAP_t {
@@ -50,7 +50,6 @@ class ModbusTCPTemplate : public Modbus {
 	};
 	cbModbusConnect cbConnect = nullptr;
 	cbModbusConnect cbDisconnect = nullptr;
-	SERVER* tcpserver = nullptr;
 	CLIENT* tcpclient[MODBUSIP_MAX_CLIENTS];
 	#if MODBUSIP_MAX_CLIENTS <= 8
 	uint8_t tcpServerConnection = 0;
@@ -76,7 +75,6 @@ class ModbusTCPTemplate : public Modbus {
 
 	int8_t getFreeClient();    // Returns free slot position
 	int8_t getSlave(IPAddress ip, uint16_t port = 0);
-	int8_t getMaster(IPAddress ip);
 	public:
 	uint16_t send(String host, TAddress startreg, cbTransaction cb, uint16_t port = MODBUSTCP_PORT, uint8_t unit = MODBUSIP_UNIT, uint8_t* data = nullptr, bool waitResponse = true);
 	uint16_t send(const char* host, TAddress startreg, cbTransaction cb, uint16_t port = MODBUSTCP_PORT, uint8_t unit = MODBUSIP_UNIT, uint8_t* data = nullptr, bool waitResponse = true);
@@ -102,12 +100,8 @@ class ModbusTCPTemplate : public Modbus {
 	bool isConnected(IPAddress ip, uint16_t port = 0);
 	bool connect(IPAddress ip, uint16_t port = 0);
 	bool disconnect(IPAddress ip, uint16_t port = 0);
-	// ModbusTCP
-	void server(uint16_t port = 0);
-	// ModbusTCP depricated
-	inline void slave(uint16_t port = 0) { server(port); }	// Depricated
-	inline void master() { client(); }	// Depricated
-	inline void begin() { server(); }; 	// Depricated
+	// ModbusTCP deprecated
+	inline void slave(uint16_t port = 0) { server(port); }	// Deprecated
 	void client();
 	void task();
 	void onConnect(cbModbusConnect cb = nullptr);
@@ -123,43 +117,33 @@ class ModbusTCPTemplate : public Modbus {
 	#endif
 };
 
-template <class SERVER, class CLIENT>
-ModbusTCPTemplate<SERVER, CLIENT>::ModbusTCPTemplate() {
+template <class CLIENT>
+ModbusTCPTemplate<CLIENT>::ModbusTCPTemplate() {
 	//_trans.reserve(MODBUSIP_MAX_TRANSACIONS);
 	for (uint8_t i = 0; i < MODBUSIP_MAX_CLIENTS; i++)
 		tcpclient[i] = nullptr;
 	resolve = defaultResolver;
 }
 
-template <class SERVER, class CLIENT>
-void ModbusTCPTemplate<SERVER, CLIENT>::client() {
+template <class CLIENT>
+void ModbusTCPTemplate<CLIENT>::client() {
 
-}
-
-template <class SERVER, class CLIENT>
-void ModbusTCPTemplate<SERVER, CLIENT>::server(uint16_t port) {
-	if (port)
-		serverPort = port;
-	else
-		serverPort = defaultPort;
-	tcpserver = new SERVER(serverPort);
-	tcpserver->begin();
 }
 
 #if defined(MODBUSIP_USE_DNS)
-template <class SERVER, class CLIENT>
-bool ModbusTCPTemplate<SERVER, CLIENT>::connect(String host, uint16_t port) {
+template <class CLIENT>
+bool ModbusTCPTemplate<CLIENT>::connect(String host, uint16_t port) {
     return connect(resolve(host.c_str()), port);
 }
 
-template <class SERVER, class CLIENT>
-bool ModbusTCPTemplate<SERVER, CLIENT>::connect(const char* host, uint16_t port) {
+template <class CLIENT>
+bool ModbusTCPTemplate<CLIENT>::connect(const char* host, uint16_t port) {
     return connect(resolve(host), port);
 }
 #endif
 
-template <class SERVER, class CLIENT>
-bool ModbusTCPTemplate<SERVER, CLIENT>::connect(IPAddress ip, uint16_t port) {
+template <class CLIENT>
+bool ModbusTCPTemplate<CLIENT>::connect(IPAddress ip, uint16_t port) {
 	//cleanupConnections();
 	if (!ip)
 		return false;
@@ -182,8 +166,8 @@ bool ModbusTCPTemplate<SERVER, CLIENT>::connect(IPAddress ip, uint16_t port) {
 	return true;
 }
 
-template <class SERVER, class CLIENT>
-uint32_t ModbusTCPTemplate<SERVER, CLIENT>::eventSource() {		// Returns IP of current processing client query
+template <class CLIENT>
+uint32_t ModbusTCPTemplate<CLIENT>::eventSource() {		// Returns IP of current processing client query
 	if (n >= 0 && n < MODBUSIP_MAX_CLIENTS && tcpclient[n])
 	#if !defined(ethernet_h)
 		return (uint32_t)tcpclient[n]->remoteIP();
@@ -193,8 +177,8 @@ uint32_t ModbusTCPTemplate<SERVER, CLIENT>::eventSource() {		// Returns IP of cu
 	return (uint32_t)INADDR_NONE;
 }
 
-template <class SERVER, class CLIENT>
-TTransaction* ModbusTCPTemplate<SERVER, CLIENT>::searchTransaction(uint16_t id) {
+template <class CLIENT>
+TTransaction* ModbusTCPTemplate<CLIENT>::searchTransaction(uint16_t id) {
 #define MODBUSIP_COMPARE_TRANS [id](TTransaction& trans){return trans.transactionId == id;}
 	#if defined(MODBUS_USE_STL)
 	std::vector<TTransaction>::iterator it = std::find_if(_trans.begin(), _trans.end(), MODBUSIP_COMPARE_TRANS);
@@ -205,60 +189,11 @@ TTransaction* ModbusTCPTemplate<SERVER, CLIENT>::searchTransaction(uint16_t id) 
 	#endif
 }
 
-template <class SERVER, class CLIENT>
-void ModbusTCPTemplate<SERVER, CLIENT>::task() {
+template <class CLIENT>
+void ModbusTCPTemplate<CLIENT>::task() {
 	MBAP_t _MBAP;
 	uint32_t taskStart = millis();
 	cleanupConnections();
-	if (tcpserver) {
-		CLIENT c;
-		// WiFiServer.available() == Ethernet.accept() and should wrapped to get code to be compatible with Ethernet library (See ModbusTCP.h code).
-		// WiFiServer.available() != Ethernet.available() internally
-#if defined(MODBUSIP_USE_AVAILABLE)
-		while (millis() - taskStart < MODBUSIP_MAX_READMS && (c = tcpserver->available())) {
-#else
-		while (millis() - taskStart < MODBUSIP_MAX_READMS && (c = tcpserver->accept())) {
-#endif
-#if defined(MODBUSIP_DEBUG)
-			Serial.println("IP: Accepted");
-#endif
-			CLIENT* currentClient = new CLIENT(c);
-			if (!currentClient || !currentClient->connected()) {
-				delete currentClient;
-				continue;
-			}
-#if defined(MODBUSRTU_DEBUG)
-			Serial.println("IP: Connected");
-#endif
-			if (cbConnect == nullptr || cbConnect(currentClient->remoteIP())) {
-				#if defined(MODBUSIP_UNIQUE_CLIENTS)
-				// Disconnect previous connection from same IP if present
-				n = getMaster(currentClient->remoteIP());
-				if (n != -1) {
-					tcpclient[n]->flush();
-					delete tcpclient[n];
-					tcpclient[n] = nullptr;
-				}
-				#endif
-				n = getFreeClient();
-				if (n > -1) {
-					tcpclient[n] = currentClient;
-					BIT_SET(tcpServerConnection, n);
-#if defined(MODBUSIP_DEBUG)
-					Serial.print("IP: Conn ");
-					Serial.println(n);
-#endif
-#if defined(MODBUSIP_USE_AVAILABLE)
-					break;	// while
-#else
-					continue; // while
-#endif
-				}
-			}
-			// Close connection if callback returns false or MODBUSIP_MAX_CLIENTS reached
-			delete currentClient;
-		}
-	}
 	for (n = 0; n < MODBUSIP_MAX_CLIENTS; n++) {
 		if (!tcpclient[n]) continue;
 		if (!tcpclient[n]->connected()) continue;
@@ -349,7 +284,6 @@ void ModbusTCPTemplate<SERVER, CLIENT>::task() {
 					}
 				}
 			}
-			if (!BIT_CHECK(tcpServerConnection, n)) _reply = REPLY_OFF;	// No replay if it was responce to master
 			if (_reply != REPLY_OFF) {
 				_MBAP.length = __swap_16(_len+1);     // _len+1 for last byte from MBAP					
 				size_t send_len = (uint16_t)_len + sizeof(_MBAP.raw);
@@ -370,18 +304,18 @@ void ModbusTCPTemplate<SERVER, CLIENT>::task() {
 	cleanupTransactions();
 }
 
-template <class SERVER, class CLIENT>
-uint16_t ModbusTCPTemplate<SERVER, CLIENT>::send(String host, TAddress startreg, cbTransaction cb, uint16_t port, uint8_t unit, uint8_t* data, bool waitResponse) {
+template <class CLIENT>
+uint16_t ModbusTCPTemplate<CLIENT>::send(String host, TAddress startreg, cbTransaction cb, uint16_t port, uint8_t unit, uint8_t* data, bool waitResponse) {
 	return send(resolve(host.c_str()), startreg, cb, port, unit, data, waitResponse);
 }
 
-template <class SERVER, class CLIENT>
-uint16_t ModbusTCPTemplate<SERVER, CLIENT>::send(const char* host, TAddress startreg, cbTransaction cb, uint16_t port, uint8_t unit, uint8_t* data, bool waitResponse) {
+template <class CLIENT>
+uint16_t ModbusTCPTemplate<CLIENT>::send(const char* host, TAddress startreg, cbTransaction cb, uint16_t port, uint8_t unit, uint8_t* data, bool waitResponse) {
 	return send(resolve(host), startreg, cb, port, unit, data, waitResponse);
 }
 
-template <class SERVER, class CLIENT>
-uint16_t ModbusTCPTemplate<SERVER, CLIENT>::send(IPAddress ip, TAddress startreg, cbTransaction cb, uint16_t port, uint8_t unit, uint8_t* data, bool waitResponse) {
+template <class CLIENT>
+uint16_t ModbusTCPTemplate<CLIENT>::send(IPAddress ip, TAddress startreg, cbTransaction cb, uint16_t port, uint8_t unit, uint8_t* data, bool waitResponse) {
 	MBAP_t _MBAP;
 	uint16_t result = 0;
 	int8_t p;
@@ -391,11 +325,7 @@ uint16_t ModbusTCPTemplate<SERVER, CLIENT>::send(IPAddress ip, TAddress startreg
 #endif
 	if (!ip)
 		return 0;
-	if (tcpserver) {
-		p = getMaster(ip);
-	} else {
-		p = getSlave(ip, port);
-	}
+	p = getSlave(ip, port);
 	if (p == -1 || !tcpclient[p]->connected()) {
 		if (!autoConnectMode)
 			goto cleanup;
@@ -439,18 +369,18 @@ uint16_t ModbusTCPTemplate<SERVER, CLIENT>::send(IPAddress ip, TAddress startreg
 	return result;
 }
 
-template <class SERVER, class CLIENT>
-void ModbusTCPTemplate<SERVER, CLIENT>::onConnect(cbModbusConnect cb) {
+template <class CLIENT>
+void ModbusTCPTemplate<CLIENT>::onConnect(cbModbusConnect cb) {
 	cbConnect = cb;
 }
 
-template <class SERVER, class CLIENT>
-void ModbusTCPTemplate<SERVER, CLIENT>::onDisconnect(cbModbusConnect cb) {
+template <class CLIENT>
+void ModbusTCPTemplate<CLIENT>::onDisconnect(cbModbusConnect cb) {
 		cbDisconnect = cb;
 }
 
-template <class SERVER, class CLIENT>
-void ModbusTCPTemplate<SERVER, CLIENT>::cleanupConnections() {
+template <class CLIENT>
+void ModbusTCPTemplate<CLIENT>::cleanupConnections() {
 	for (uint8_t i = 0; i < MODBUSIP_MAX_CLIENTS; i++) {
 		if (tcpclient[i] && !tcpclient[i]->connected()) {
 			//IPAddress ip = tcpclient[i]->remoteIP();
@@ -463,8 +393,8 @@ void ModbusTCPTemplate<SERVER, CLIENT>::cleanupConnections() {
 	}
 }
 
-template <class SERVER, class CLIENT>
-void ModbusTCPTemplate<SERVER, CLIENT>::cleanupTransactions() {
+template <class CLIENT>
+void ModbusTCPTemplate<CLIENT>::cleanupTransactions() {
 	#if defined(MODBUS_USE_STL)
 	for (auto it = _trans.begin(); it != _trans.end();) {
 		if (millis() - it->timestamp > MODBUSIP_TIMEOUT || it->forcedEvent != Modbus::EX_SUCCESS) {
@@ -492,73 +422,65 @@ void ModbusTCPTemplate<SERVER, CLIENT>::cleanupTransactions() {
 	#endif
 }
 
-template <class SERVER, class CLIENT>
-int8_t ModbusTCPTemplate<SERVER, CLIENT>::getFreeClient() {
+template <class CLIENT>
+int8_t ModbusTCPTemplate<CLIENT>::getFreeClient() {
 	for (uint8_t i = 0; i < MODBUSIP_MAX_CLIENTS; i++)
 		if (!tcpclient[i])
 			return i;
 	return -1;
 }
 
-template <class SERVER, class CLIENT>
-int8_t ModbusTCPTemplate<SERVER, CLIENT>::getSlave(IPAddress ip, uint16_t port) {
+template <class CLIENT>
+int8_t ModbusTCPTemplate<CLIENT>::getSlave(IPAddress ip, uint16_t port) {
 	for (uint8_t i = 0; i < MODBUSIP_MAX_CLIENTS; i++)
 		if (tcpclient[i] && tcpclient[i]->connected() && tcpclient[i]->remoteIP() == ip && tcpclient[i]->remotePort() == port && !BIT_CHECK(tcpServerConnection, i))
 			return i;
 	return -1;
 }
 
-template <class SERVER, class CLIENT>
-int8_t ModbusTCPTemplate<SERVER, CLIENT>::getMaster(IPAddress ip) {
-	for (uint8_t i = 0; i < MODBUSIP_MAX_CLIENTS; i++)
-		if (tcpclient[i] && tcpclient[i]->connected() && tcpclient[i]->remoteIP() == ip && BIT_CHECK(tcpServerConnection, i))
-			return i;
-	return -1;
-}
-
-template <class SERVER, class CLIENT>
-bool ModbusTCPTemplate<SERVER, CLIENT>::isTransaction(uint16_t id) {
+template <class CLIENT>
+bool ModbusTCPTemplate<CLIENT>::isTransaction(uint16_t id) {
 	return searchTransaction(id) != nullptr;
 }
 #if defined(MODBUSIP_USE_DNS)
-template <class SERVER, class CLIENT>
-bool ModbusTCPTemplate<SERVER, CLIENT>::isConnected(String host, uint16_t port) {
+template <class CLIENT>
+bool ModbusTCPTemplate<CLIENT>::isConnected(String host, uint16_t port) {
 	return isConnected(resolve(host.c_str()), port);
 }
 
-template <class SERVER, class CLIENT>
-bool ModbusTCPTemplate<SERVER, CLIENT>::isConnected(const char* host, uint16_t port) {
+template <class CLIENT>
+bool ModbusTCPTemplate<CLIENT>::isConnected(const char* host, uint16_t port) {
 	return isConnected(resolve(host), port);
 }
 #endif
 
-template <class SERVER, class CLIENT>
-bool ModbusTCPTemplate<SERVER, CLIENT>::isConnected(IPAddress ip, uint16_t port) {
+template <class CLIENT>
+bool ModbusTCPTemplate<CLIENT>::isConnected(IPAddress ip, uint16_t port) {
 	if (!ip)
 		return false;
 	int8_t p = getSlave(ip, port);
 	return  p != -1 && tcpclient[p]->connected();
 }
 
-template <class SERVER, class CLIENT>
-void ModbusTCPTemplate<SERVER, CLIENT>::autoConnect(bool enabled) {
+template <class CLIENT>
+void ModbusTCPTemplate<CLIENT>::autoConnect(bool enabled) {
 	autoConnectMode = enabled;
 }
 
 #if defined(MODBUSIP_USE_DNS)
-template <class SERVER, class CLIENT>
-bool ModbusTCPTemplate<SERVER, CLIENT>::disconnect(String host, uint16_t port) {
+template <class CLIENT>
+bool ModbusTCPTemplate<CLIENT>::disconnect(String host, uint16_t port) {
 	return disconnect(resolve(host.c_str()), port);
 }
 
-template <class SERVER, class CLIENT>
-bool ModbusTCPTemplate<SERVER, CLIENT>::disconnect(const char* host, uint16_t port) {
+template <class CLIENT>
+bool ModbusTCPTemplate<CLIENT>::disconnect(const char* host, uint16_t port) {
 	return disconnect(resolve(host), port);
 }
 #endif
 
-template <class SERVER, class CLIENT>
-bool ModbusTCPTemplate<SERVER, CLIENT>::disconnect(IPAddress ip, uint16_t port) {
+template <class CLIENT>
+bool ModbusTCPTemplate<CLIENT>::disconnect(IPAddress ip, uint16_t port) {
 	if (!ip)
 		return false;
 	int8_t p = getSlave(ip, port);
@@ -571,8 +493,8 @@ bool ModbusTCPTemplate<SERVER, CLIENT>::disconnect(IPAddress ip, uint16_t port) 
 	return false;
 }
 
-template <class SERVER, class CLIENT>
-void ModbusTCPTemplate<SERVER, CLIENT>::dropTransactions() {
+template <class CLIENT>
+void ModbusTCPTemplate<CLIENT>::dropTransactions() {
 	#if defined(MODBUS_USE_STL)
 	for (auto &t : _trans) t.forcedEvent = EX_CANCEL;
 	#else
@@ -581,23 +503,21 @@ void ModbusTCPTemplate<SERVER, CLIENT>::dropTransactions() {
 	#endif
 }
 
-template <class SERVER, class CLIENT>
-ModbusTCPTemplate<SERVER, CLIENT>::~ModbusTCPTemplate() {
+template <class CLIENT>
+ModbusTCPTemplate<CLIENT>::~ModbusTCPTemplate() {
 	free(_frame);
 	_frame = nullptr;
 	dropTransactions();
 	cleanupConnections();
 	cleanupTransactions();
-	delete tcpserver;
-	tcpserver = nullptr;
 	for (uint8_t i = 0; i < MODBUSIP_MAX_CLIENTS; i++) {
 		delete tcpclient[i];
 		tcpclient[i] = nullptr;
 	}
 }
 
-template <class SERVER, class CLIENT>
-uint16_t ModbusTCPTemplate<SERVER, CLIENT>::setTransactionId(uint16_t t) {
+template <class CLIENT>
+uint16_t ModbusTCPTemplate<CLIENT>::setTransactionId(uint16_t t) {
 	transactionId = t;
 	if (!transactionId)
 		transactionId = 1;
