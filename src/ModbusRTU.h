@@ -27,7 +27,7 @@ class ModbusRTUTemplate : public Modbus {
 		cbTransaction _cb = nullptr;
 		uint8_t* _data = nullptr;
 		uint8_t* _sentFrame = nullptr;
-		TAddress _sentReg = COIL(0);
+		TAddress _sentReg = IREG(0);
 		uint16_t maxRegs = MODBUS_MAX_WORDS;
 		uint8_t address = 0;
 
