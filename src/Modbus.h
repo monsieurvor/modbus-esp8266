@@ -18,17 +18,11 @@
 
 static inline uint16_t __swap_16(uint16_t num) { return (num >> 8) | (num << 8); }
 
-#define COIL(n) (TAddress){TAddress::COIL, n}
-#define ISTS(n) (TAddress){TAddress::ISTS, n}
 #define IREG(n) (TAddress){TAddress::IREG, n}
 #define HREG(n) (TAddress){TAddress::HREG, n}
 #define NULLREG (TAddress){TAddress::NONE, 0xFFFF}
 #define BIT_VAL(v) (v?0xFF00:0x0000)
 #define BIT_BOOL(v) (v==0xFF00)
-#define COIL_VAL(v) (v?0xFF00:0x0000)
-#define COIL_BOOL(v) (v==0xFF00)
-#define ISTS_VAL(v) (v?0xFF00:0x0000)
-#define ISTS_BOOL(v) (v==0xFF00)
 
 // For depricated (v1.xx) onSet/onGet format compatibility
 #define cbDefault nullptr
@@ -41,7 +35,7 @@ typedef uint16_t (*cbModbus)(TRegister* reg, uint16_t val); // Callback function
 #endif
 
 struct TAddress {
-    enum RegType {COIL, ISTS, IREG, HREG, NONE = 0xFF};
+    enum RegType {IREG, HREG, NONE = 0xFF};
     RegType type;
     uint16_t address;
     bool operator==(const TAddress &obj) const { // TAddress == TAddress
@@ -67,12 +61,6 @@ struct TAddress {
         TAddress result(*this);
         result.address += inc;
         return result;
-    }
-    bool isCoil() {
-       return type == COIL;
-    }
-    bool isIsts() {
-       return type == ISTS;
     }
     bool isIreg() {
         return type == IREG;
@@ -101,14 +89,11 @@ class Modbus {
     public:
         //Function Codes
         enum FunctionCode {
-            FC_READ_COILS       = 0x01, // Read Coils (Output) Status
             FC_READ_INPUT_STAT  = 0x02, // Read Input Status (Discrete Inputs)
             FC_READ_REGS        = 0x03, // Read Holding Registers
             FC_READ_INPUT_REGS  = 0x04, // Read Input Registers
-            FC_WRITE_COIL       = 0x05, // Write Single Coil (Output)
             FC_WRITE_REG        = 0x06, // Preset Single Register
             FC_DIAGNOSTICS      = 0x08, // Not implemented. Diagnostics (Serial Line only)
-            FC_WRITE_COILS      = 0x0F, // Write Multiple Coils (Outputs)
             FC_WRITE_REGS       = 0x10, // Write block of contiguous registers
             FC_READ_FILE_REC    = 0x14, // Read File Record
             FC_WRITE_FILE_REC   = 0x15, // Write File Record
