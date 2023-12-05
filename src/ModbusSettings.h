@@ -57,8 +57,6 @@ If defined regisers count will be limited.
 //#define MODBUS_STATIC_FRAME
 #define MODBUS_MAX_WORDS 0x007D
 #define MODBUS_MAX_BITS 0x07D0
-#define MODBUS_FILES
-#define MODBUS_MAX_FILES 0x270F
 #define MODBUSTCP_PORT 	  502
 #define MODBUSTLS_PORT 	  802
 #define MODBUSIP_MINFRAME 2
