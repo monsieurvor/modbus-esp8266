@@ -198,36 +198,6 @@ void Modbus::slavePDU(uint8_t* frame) {
             _onRequestSuccess(fcode, {HREG(field1), field2});
         break;
 
-        case FC_READ_COILS:
-            //field1 = startreg, field2 = numregs
-            ex = _onRequest(fcode, {COIL(field1), field2});
-            if (ex != EX_SUCCESS) {
-                exceptionResponse(fcode, ex);
-                return;
-            }
-            ex = readBits(COIL(field1), field2, fcode);
-            if (ex != EX_SUCCESS) {
-                exceptionResponse(fcode, ex);
-                return;
-            }
-            _onRequestSuccess(fcode, {COIL(field1), field2});
-        break;
-
-        case FC_READ_INPUT_STAT:
-            //field1 = startreg, field2 = numregs
-            ex = _onRequest(fcode, {ISTS(field1), field2});
-            if (ex != EX_SUCCESS) {
-                exceptionResponse(fcode, ex);
-                return;
-            }
-            ex = readBits(ISTS(field1), field2, fcode);
-            if (ex != EX_SUCCESS) {
-                exceptionResponse(fcode, ex);
-                return;
-            }
-            _onRequestSuccess(fcode, {ISTS(field1), field2});
-        break;
-
         case FC_READ_INPUT_REGS:
             //field1 = startreg, field2 = numregs
             ex = _onRequest(fcode, {IREG(field1), field2});
@@ -242,57 +212,7 @@ void Modbus::slavePDU(uint8_t* frame) {
             }
             _onRequestSuccess(fcode, {IREG(field1), field2});
         break;
-
-        case FC_WRITE_COIL:
-            //field1 = reg, field2 = status, header len = 3
-            ex = _onRequest(fcode, {COIL(field1), field2});
-            if (ex != EX_SUCCESS) {
-                exceptionResponse(fcode, ex);
-                return;
-            }
-            if (field2 != 0xFF00 && field2 != 0x0000) { //Check value (status)
-                exceptionResponse(fcode, EX_ILLEGAL_VALUE);
-                return;
-            }
-            if (!Reg(COIL(field1), field2)) { //Check Address and execute (reg exists?)
-                exceptionResponse(fcode, EX_ILLEGAL_ADDRESS);
-                return;
-            }
-            if (Reg(COIL(field1)) != field2) { //Check for failure
-                exceptionResponse(fcode, EX_SLAVE_FAILURE);
-                return;
-            }
-            _reply = REPLY_ECHO;
-            _onRequestSuccess(fcode, {COIL(field1), field2});
-        break;
-
-        case FC_WRITE_COILS:
-            //field1 = startreg, field2 = numregs, frame[5] = bytecount, header len = 6
-            ex = _onRequest(fcode, {COIL(field1), field2});
-            if (ex != EX_SUCCESS) {
-                exceptionResponse(fcode, ex);
-                return;
-            }
-            bytecount_calc = field2 / 8;
-            if (field2%8) bytecount_calc++;
-            if (field2 < 0x0001 || field2 > MODBUS_MAX_BITS || 0xFFFF - field1 < field2 || frame[5] != bytecount_calc) { //Check registers range and data size maches
-                exceptionResponse(fcode, EX_ILLEGAL_VALUE);
-                return;
-            }
-            for (k = 0; k < field2; k++) { //Check Address (startreg...startreg + numregs)
-                if (!searchRegister(COIL(field1) + k)) {
-                    exceptionResponse(fcode, EX_ILLEGAL_ADDRESS);
-                    return;
-                }
-            }
-            if (!setMultipleBits(frame + 6, COIL(field1), field2)) {
-                exceptionResponse(fcode, EX_SLAVE_FAILURE);
-                return;
-            }
-            successResponce(COIL(field1), field2, fcode);
-            _reply = REPLY_NORMAL;
-            _onRequestSuccess(fcode, {COIL(field1), field2});
-        break;
+	    
     #if defined(MODBUS_FILES)
         case FC_READ_FILE_REC:
             if (frame[1] < 0x07 || frame[1] > 0xF5) {   // Wrong request data size
@@ -772,21 +692,6 @@ void Modbus::masterPDU(uint8_t* frame, uint8_t* sourceFrame, TAddress startreg, 
                 setMultipleWords((uint16_t*)(frame + 2), startreg, field2);
             }
         break;
-        case FC_READ_COILS:
-        case FC_READ_INPUT_STAT:
-            //field2 = numregs, frame[1] = data length, header len = 2
-            bytecount_calc = field2 / 8;
-            if (field2 % 8) bytecount_calc++;
-            if (frame[1] != bytecount_calc) { // check if data size matches
-                _reply = EX_DATA_MISMACH;
-                break;
-            }
-            if (output) {
-                bitsToBool((bool*)output, frame + 2, field2);
-            } else {
-                setMultipleBits(frame + 2, startreg, field2);
-            }
-        break;
     #if defined(MODBUS_FILES)
         case FC_READ_FILE_REC:
         // Should check if byte order swap needed
@@ -814,8 +719,6 @@ void Modbus::masterPDU(uint8_t* frame, uint8_t* sourceFrame, TAddress startreg, 
     #endif
         case FC_WRITE_REG:
         case FC_WRITE_REGS:
-        case FC_WRITE_COIL:
-        case FC_WRITE_COILS:
         case FC_MASKWRITE_REG:
         break;
 
