@@ -14,7 +14,7 @@
 #include "ModbusAPI.h"
 #include "ModbusTCPTemplate.h"
 
-class ModbusTCP : public ModbusAPI<ModbusTCPTemplate<WiFiServerESPWrapper, WiFiClient>> {
+class ModbusTCP : public ModbusAPI<ModbusTCPTemplate<WiFiClient>> {
 #if defined(MODBUSIP_USE_DNS)
   private:
     static IPAddress resolver(const char *host) {
