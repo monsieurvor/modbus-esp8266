@@ -101,8 +101,7 @@ class ModbusTCPTemplate : public Modbus {
 	bool connect(IPAddress ip, uint16_t port = 0);
 	bool disconnect(IPAddress ip, uint16_t port = 0);
 	// ModbusTCP deprecated
-	inline void master() { client(); }	// Depricated
-	inline void begin() { server(); }
+	inline void master() { client(); }	// Deprecated
 	void client();
 	void task();
 	void onConnect(cbModbusConnect cb = nullptr);
