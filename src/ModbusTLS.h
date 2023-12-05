@@ -8,24 +8,10 @@
 #error Unsupported architecture
 #endif
 #include <WiFiClientSecure.h>
-#if defined(ESP8266)
-#include <WiFiServerSecure.h>
-#else
-// Just emty stub
-class WiFiServerSecure {
-public:
-    WiFiServerSecure(uint16_t){}
-    WiFiClientSecure available(){}
-    void begin();
-    inline WiFiClientSecure accept() {
-        return available();
-    }
-};
-#endif
 #include "ModbusTCPTemplate.h"
 #include "ModbusAPI.h"
 
-class ModbusTLS : public ModbusAPI<ModbusTCPTemplate<WiFiServerSecure, WiFiClientSecure>> {
+class ModbusTLS : public ModbusAPI<ModbusTCPTemplate<WiFiClientSecure>> {
     private:
     int8_t _connect(IPAddress ip, uint16_t port, const char* client_cert = nullptr, const char* client_private_key = nullptr) {
 	    int8_t p = getFreeClient();
@@ -60,20 +46,6 @@ class ModbusTLS : public ModbusAPI<ModbusTCPTemplate<WiFiServerSecure, WiFiClien
 #endif
     }
     #if defined(ESP8266)
-	void server(uint16_t port, const char* server_cert = nullptr, const char* server_private_key = nullptr, const char* ca_cert = nullptr) {
-        serverPort = port;
-	    tcpserver = new WiFiServerSecure(serverPort);
-        BearSSL::X509List *serverCertList = new BearSSL::X509List(server_cert);
-        BearSSL::PrivateKey *serverPrivKey = new BearSSL::PrivateKey(server_private_key);
-        tcpserver->setRSACert(serverCertList, serverPrivKey);
-        if (ca_cert) {
-            BearSSL::X509List *trustedCA = new BearSSL::X509List(ca_cert);
-            tcpserver->setClientTrustAnchor(trustedCA);
-        }
-        //tcpserver->setBufferSizes(512, 512);
-	    tcpserver->begin();
-    }
-
     bool connectWithKnownKey(IPAddress ip, uint16_t port, const char* client_cert = nullptr, const char* client_private_key = nullptr, const char* key = nullptr) {
         if(getSlave(ip) >= 0)
 		    return true;
