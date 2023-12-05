@@ -19,11 +19,6 @@ class ModbusAPI : public T {
 	template <typename TYPEID>
 	uint16_t readIreg(TYPEID id, uint16_t offset, uint16_t* value, uint16_t numregs = 1, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
 
-  	template <typename TYPEID>
-	uint16_t readFileRec(TYPEID slaveId, uint16_t fileNum, uint16_t startRec, uint16_t len, uint8_t* data, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
-	template <typename TYPEID>
-	uint16_t writeFileRec(TYPEID slaveId, uint16_t fileNum, uint16_t startRec, uint16_t len, uint8_t* data, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
-
 	template <typename TYPEID>
 	uint16_t rawRequest(TYPEID ip, uint8_t* data, uint16_t len, cbTransaction cb = nullptr, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT);
 	template <typename TYPEID>
@@ -67,21 +62,6 @@ uint16_t ModbusAPI<T>::FNAME(TYPEID ip, uint16_t offset, VALTYPE* value, uint16_
 }
 IMPLEMENT_READREGS(readHreg, HREG, FC_READ_REGS, MODBUS_MAX_WORDS, uint16_t)
 IMPLEMENT_READREGS(readIreg, IREG, FC_READ_INPUT_REGS, MODBUS_MAX_WORDS, uint16_t)
-
-template <class T> \
-template <typename TYPEID> \
-uint16_t ModbusAPI<T>::readFileRec(TYPEID slaveId, uint16_t fileNum, uint16_t startRec, uint16_t len, uint8_t* data, cbTransaction cb, uint16_t port, uint8_t unit) {
-	if (startRec > MODBUS_MAX_FILES) return 0;
-	if (!this->readSlaveFile(&fileNum, &startRec, &len, 1, Modbus::FC_READ_FILE_REC)) return 0;
-	return this->send(slaveId, NULLREG, cb, port, unit, data);
-};
-template <class T> \
-template <typename TYPEID> \
-uint16_t ModbusAPI<T>::writeFileRec(TYPEID slaveId, uint16_t fileNum, uint16_t startRec, uint16_t len, uint8_t* data, cbTransaction cb, uint16_t port, uint8_t unit) {
-	if (startRec > MODBUS_MAX_FILES) return 0;
-	if (!this->writeSlaveFile(&fileNum, &startRec, &len, 1, Modbus::FC_WRITE_FILE_REC, data)) return 0;
-	return this->send(slaveId, NULLREG, cb, port, unit);
-};
 
 template <class T>
 template <typename TYPEID>
