@@ -433,7 +433,7 @@ int8_t ModbusTCPTemplate<CLIENT>::getFreeClient() {
 template <class CLIENT>
 int8_t ModbusTCPTemplate<CLIENT>::getSlave(IPAddress ip, uint16_t port) {
 	for (uint8_t i = 0; i < MODBUSIP_MAX_CLIENTS; i++)
-		if (tcpclient[i] && tcpclient[i]->connected() && tcpclient[i]->remoteIP() == ip && tcpclient[i]->remotePort() == port && !BIT_CHECK(tcpServerConnection, i))
+		if (tcpclient[i] && tcpclient[i]->remoteIP() == ip && tcpclient[i]->remotePort() == port && !BIT_CHECK(tcpServerConnection, i))
 			return i;
 	return -1;
 }
