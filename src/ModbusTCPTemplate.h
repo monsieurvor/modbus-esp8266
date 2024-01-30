@@ -94,8 +94,8 @@ class ModbusTCPTemplate : public Modbus {
 	bool isConnected(const char* host, uint16_t port = 0);
 	bool connect(String host, uint16_t port = 0);
 	bool connect(const char* host, uint16_t port = 0);
-	bool disconnect(String host);
-	bool disconnect(const char* host);
+	bool disconnect(String host, uint16_t port);
+	bool disconnect(const char* host, uint16_t port);
 #endif
 	bool isConnected(IPAddress ip, uint16_t port = 0);
 	bool connect(IPAddress ip, uint16_t port = 0);
@@ -433,8 +433,11 @@ int8_t ModbusTCPTemplate<CLIENT>::getFreeClient() {
 template <class CLIENT>
 int8_t ModbusTCPTemplate<CLIENT>::getSlave(IPAddress ip, uint16_t port) {
 	for (uint8_t i = 0; i < MODBUSIP_MAX_CLIENTS; i++)
-		if (tcpclient[i] && tcpclient[i]->remoteIP() == ip && tcpclient[i]->remotePort() == port && !BIT_CHECK(tcpServerConnection, i))
-			return i;
+		if (tcpclient[i] && tcpclient[i]->remoteIP() == ip && !BIT_CHECK(tcpServerConnection, i))
+		{
+			if (port == 0 || (port > 0 && tcpclient[i]->remotePort() == port))
+				return i;
+		}
 	return -1;
 }
 
