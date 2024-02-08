@@ -76,9 +76,9 @@ class ModbusTCPTemplate : public Modbus {
 	int8_t getFreeClient();    // Returns free slot position
 	int8_t getSlave(IPAddress ip, uint16_t port = 0);
 	public:
-	uint16_t send(String host, TAddress startreg, cbTransaction cb, uint16_t port = MODBUSTCP_PORT, uint8_t unit = MODBUSIP_UNIT, uint8_t* data = nullptr, bool waitResponse = true);
-	uint16_t send(const char* host, TAddress startreg, cbTransaction cb, uint16_t port = MODBUSTCP_PORT, uint8_t unit = MODBUSIP_UNIT, uint8_t* data = nullptr, bool waitResponse = true);
-	uint16_t send(IPAddress ip, TAddress startreg, cbTransaction cb, uint16_t port = MODBUSTCP_PORT, uint8_t unit = MODBUSIP_UNIT, uint8_t* data = nullptr, bool waitResponse = true);
+	uint16_t send(String host, TAddress startreg, cbTransaction cb, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT, uint8_t* data = nullptr, bool waitResponse = true);
+	uint16_t send(const char* host, TAddress startreg, cbTransaction cb, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT, uint8_t* data = nullptr, bool waitResponse = true);
+	uint16_t send(IPAddress ip, TAddress startreg, cbTransaction cb, uint16_t port = 0, uint8_t unit = MODBUSIP_UNIT, uint8_t* data = nullptr, bool waitResponse = true);
 	// Prepare and send ModbusIP frame. _frame buffer and _len should be filled with Modbus data
 	// ip - slave ip address
 	// startreg - first local register to save returned data to (miningless for write to slave operations)
